@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberGuard Input Interceptor</title>
+</head>
+<body>
+    <h1>CyberGuard Security Layer</h1>
+    <p>Type your query below to test our Python application filter:</p>
+
+    <form method="POST">
+        {% csrf_token %}
+        
+        <textarea name="text" rows="4" cols="50" placeholder="Type text or test script payloads here..."></textarea>
+        <br><br>
+        
+        <input type="submit" value="Deploy Integrity Scan" />
+    </form>
+</body>
+</html>
