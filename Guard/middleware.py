@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from .models import SecAuditLog, UserInput
+from .models import sec_audit_log, user_input
 from .security_engine import ThreatAnalyzer
 
 class CyberGuardGlobalMiddleware:
@@ -23,14 +23,14 @@ class CyberGuardGlobalMiddleware:
 
                 if is_malicious:
                     # Log forensic trail out-of-band (Truncate payload to 2000 chars max for DB safety)
-                    SecAuditLog.objects.create(
+                    sec_audit_log.objects.create(
                         attempted_payload=user_text[:2000],
                         flagged_keywords=f"{threat_type} ({signature})",
                         ip_address=ip
                     )
 
                     # Mark data integrity state
-                    UserInput.objects.create(
+                    user_input.objects.create(
                         text=user_text[:2000],
                         is_safe=False
                     )
