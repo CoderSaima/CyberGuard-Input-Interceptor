@@ -1,7 +1,7 @@
 import re
 
 class ThreatAnalyzer:
-    # Pre-compiled high-performance regex vectors to stop evasion techniques
+    
     SQLI_PATTERN = re.compile(
         r"('(--|\#|\/\*)|(\b(SELECT|UNION|INSERT|DELETE|DROP|UPDATE|WHERE|OR|AND)\b))|(\d+=\d+)", 
         re.IGNORECASE
