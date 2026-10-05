@@ -1,11 +1,13 @@
-from .models import sec_audit_log, user_input
-from django.http import HttpResponse
+from django.http import JsonResponse
+from .models import SecAuditLog, UserInput
+from .security_engine import ThreatAnalyzer
 
 class CyberGuardGlobalMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
+        # Extract Client Network Meta-Stamps
         x_forward = request.META.get('HTTP_X_FORWARDED_FOR')
         if x_forward:
             ip = x_forward.split(',')[0].strip() 
@@ -17,26 +19,31 @@ class CyberGuardGlobalMiddleware:
                 if key == 'csrfmiddlewaretoken':
                     continue
 
-                forbidden_keywords = ["<script>", "1==1", "' or '1'='1", "drop table"]
-                flagged_word = None
+                is_malicious, threat_type, signature = ThreatAnalyzer.scan_payload(user_text)
 
-                for words in forbidden_keywords:
-                    if words in user_text.lower():
-                        flagged_word = words
-                        break
-
-                if flagged_word:
-                    sec_audit_log.objects.create(
-                        attempted_payload=user_text,
-                        flagged_keywords=flagged_word,
+                if is_malicious:
+                    # Log forensic trail out-of-band (Truncate payload to 2000 chars max for DB safety)
+                    SecAuditLog.objects.create(
+                        attempted_payload=user_text[:2000],
+                        flagged_keywords=f"{threat_type} ({signature})",
                         ip_address=ip
                     )
 
-                    user_input.objects.create(
-                        text=user_text,
+                    # Mark data integrity state
+                    UserInput.objects.create(
+                        text=user_text[:2000],
                         is_safe=False
                     )
-                    return HttpResponse(f"🔴 SECURITY SHIELD INTERCEPT: Access Denied. Your IP ({ip}) has been logged for system auditing.")
+
+                    # Return clean JSON API error status response instead of raw HTML string
+                    return JsonResponse(
+                        {
+                            "status": "denied",
+                            "error": "SECURITY_INTERCEPT",
+                            "message": "Malicious patterns identified. Footprint logged.",
+                            "incident_meta": {"origin": ip, "class": threat_type}
+                        },
+                        status=403
+                    )
             
-        response = self.get_response(request)
-        return response
+        return self.get_response(request)
