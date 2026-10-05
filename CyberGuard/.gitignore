@@ -1,0 +1,15 @@
+# Database files (CRITICAL: Never leak your local data)
+*.sqlite3
+db.sqlite3
+
+# Python runtime artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment variables / API Keys
+.env
+
+# Media storage (If you are uploading PDFs in ResuTrack)
+media/
